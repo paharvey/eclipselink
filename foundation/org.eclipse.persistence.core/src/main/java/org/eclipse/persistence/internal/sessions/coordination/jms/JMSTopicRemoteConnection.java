@@ -242,7 +242,7 @@ public class JMSTopicRemoteConnection extends BroadcastRemoteConnection implemen
             return;
         }
 
-        processReceivedObject(object, messageId);
+        rcm.getServerPlatform().launchContainerRunnable(new JMSOnMessageHelper(object, messageId));
     }
 
     /**
@@ -325,7 +325,7 @@ public class JMSTopicRemoteConnection extends BroadcastRemoteConnection implemen
                         }
                     }
                     // process the message and log a warning without throwing exception if there was exception.
-                    rcm.getServerPlatform().launchContainerRunnable(new JMSOnMessageHelper(message));
+                    onMessage(message);
                 }
             } catch (JMSException e) {
                 // need the second isActive check here:
@@ -501,15 +501,18 @@ public class JMSTopicRemoteConnection extends BroadcastRemoteConnection implemen
     }
 
     class JMSOnMessageHelper implements Runnable {
-        Message message = null;
+        final Object object;
 
-        public JMSOnMessageHelper(Message message) {
-            this.message = message;
+        final String messageId;
+
+        public JMSOnMessageHelper(Object object, String messageId) {
+            this.object = object;
+            this.messageId = messageId;
         }
 
         @Override
         public void run() {
-            onMessage(message);
+            processReceivedObject(object, messageId);
         }
     }
 }
